@@ -85,11 +85,11 @@ export const replaceBackground = (
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const tempCanvas = document.createElement("canvas");
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
-  const tempCtx = tempCanvas.getContext("2d");
-  if (!tempCtx) return;
+  // Store the original image data
+  const originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw background image scaled to fit
   const scale = Math.max(
@@ -99,18 +99,13 @@ export const replaceBackground = (
   const x = (canvas.width - backgroundImage.width * scale) / 2;
   const y = (canvas.height - backgroundImage.height * scale) / 2;
   
-  tempCtx.drawImage(
+  ctx.drawImage(
     backgroundImage,
     x, y,
     backgroundImage.width * scale,
     backgroundImage.height * scale
   );
 
-  // Draw original image on top
-  tempCtx.globalCompositeOperation = "destination-over";
-  tempCtx.drawImage(canvas, 0, 0);
-
-  // Copy result back to original canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(tempCanvas, 0, 0);
+  // Draw the original image (subject) on top
+  ctx.putImageData(originalImageData, 0, 0);
 };
