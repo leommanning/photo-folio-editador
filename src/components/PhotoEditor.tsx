@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { applyFilter, rotateImage, addBorder } from "@/utils/imageUtils";
+import { removeBackground, replaceBackground } from "@/utils/backgroundUtils";
 import { toast } from "sonner";
+import BackgroundControls from "./BackgroundControls";
 
 const PhotoEditor = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -29,6 +31,38 @@ const PhotoEditor = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveBackground = () => {
+    if (!canvasRef.current) return;
+    
+    try {
+      const imageData = removeBackground(canvasRef.current);
+      const ctx = canvasRef.current.getContext("2d");
+      if (ctx) {
+        ctx.putImageData(imageData, 0, 0);
+        toast.success("Background removed successfully!");
+      }
+    } catch (error) {
+      toast.error("Failed to remove background");
+    }
+  };
+
+  const handleChangeBackground = (file: File) => {
+    if (!canvasRef.current) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        if (canvasRef.current) {
+          replaceBackground(canvasRef.current, img);
+          toast.success("Background changed successfully!");
+        }
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const applyPreset = (preset: number) => {
@@ -205,6 +239,11 @@ const PhotoEditor = () => {
               </div>
             </div>
 
+            <BackgroundControls
+              onRemoveBackground={handleRemoveBackground}
+              onChangeBackground={handleChangeBackground}
+            />
+
             <div className="space-y-4">
               <h3 className="font-semibold">Options</h3>
               
@@ -252,21 +291,6 @@ const PhotoEditor = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => toast.info("Background removal coming soon!")}
-                >
-                  Remove Background
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => toast.info("Background change coming soon!")}
-                >
-                  Change Background
-                </Button>
-              </div>
-
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant="outline"
